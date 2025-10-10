@@ -1,0 +1,5 @@
+C:/Users/82108/OneDrive/바탕 화면/4-2학기/연구실인턴십/LS_CKKS/out/build/x64-debug/CMakeFiles/edit_cache.dir
+C:/Users/82108/OneDrive/바탕 화면/4-2학기/연구실인턴십/LS_CKKS/out/build/x64-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/82108/OneDrive/바탕 화면/4-2학기/연구실인턴십/LS_CKKS/out/build/x64-debug/LS_CKKS/CMakeFiles/LS_CKKS.dir
+C:/Users/82108/OneDrive/바탕 화면/4-2학기/연구실인턴십/LS_CKKS/out/build/x64-debug/LS_CKKS/CMakeFiles/edit_cache.dir
+C:/Users/82108/OneDrive/바탕 화면/4-2학기/연구실인턴십/LS_CKKS/out/build/x64-debug/LS_CKKS/CMakeFiles/rebuild_cache.dir
