@@ -1,0 +1,9 @@
+# Visual Studio
+.vs/
+
+# Build results
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+x64/
+out/

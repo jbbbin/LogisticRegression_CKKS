@@ -45,6 +45,7 @@ void load_data(const string& filename,
 
 int logistic_ckks_example()
 {
+    /*
     vector<vector<double>> all_X; // 데이터셋 전체의 특징(features)
     vector<double> all_y;         // 데이터셋 전체의 결과 레이블
 
@@ -55,18 +56,19 @@ int logistic_ckks_example()
     catch (const exception& e) {
         cerr << "오류 발생: " << e.what() << endl;
         return 1;
-    }
+    
 
     //추론에 사용할 입력 데이터 x
     vector<double> x_vec = all_X[0];
+    }*/
 
     //임의로 정의한 가중치 벡터 beta값들
     vector<double> beta_vec = { 0.15, -0.8, 0.5, -0.2, 1.1, -0.7, 0.3, -1.2, 0.9, -0.4, 1.3, -0.6, 0.7, -1.0, 0.4, 0.9, -1.3, 0.6, 1.0 };
 
     EncryptionParameters params(scheme_type::ckks);
-    size_t poly_modulus_degree = 8192; 
+    size_t poly_modulus_degree = 16384; 
     params.set_poly_modulus_degree(poly_modulus_degree);
-    params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 60 }));
+    params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 40, 60 }));
 
     double scale = pow(2.0, 40);
 
@@ -87,28 +89,67 @@ int logistic_ckks_example()
     Evaluator evaluator(context);
     Decryptor decryptor(context, secret_key);
 
+    string user_input_line;
+    getline(cin, user_input_line);
+
+    vector<double> x_vec;
+    stringstream ss(user_input_line);
+    string value;
+
+    // bias 항에 해당하는 1.0을 맨 앞에 추가 (기존 로직 유지)
+    x_vec.push_back(1.0);
+    while (getline(ss, value, ',')) {
+        x_vec.push_back(stod(value));
+    }
+
+    size_t slot_count = encoder.slot_count();
+    vector<double> x_padded(slot_count, 0.0), beta_padded(slot_count, 0.0);
+    for (size_t i = 0; i < x_vec.size(); ++i) x_padded[i] = x_vec[i];
+    for (size_t i = 0; i < beta_vec.size(); ++i) beta_padded[i] = beta_vec[i];
+
+
     //sigmoid함수 다항근사  -> 여기에서는 g3(x) = 0.5 - 1.22096 * (x/8) +0.81562*(x/8)^3 을 사용함
      // 모든 샘플에 대해 추론을 반복합니다.
-    for (size_t sample_idx = 0; sample_idx < all_X.size(); ++sample_idx)
+    for (size_t sample_idx = 0; sample_idx < 10; ++sample_idx)
     {
-        vector<double> x_vec = all_X[sample_idx];
-        double y_true = all_y[sample_idx]; // 실제 레이블
-
         cout << "\n=======================================================" << endl;
         cout << sample_idx << "번째 Sample Inference" << endl;
 
-        //x_vec이랑 beta_vec내적
-        double dot_plain = 0.0;
-        for (size_t i = 0; i < x_vec.size(); i++) {
-            dot_plain += x_vec[i] * beta_vec[i];
-        }
-        cout << "평문 내적 결과 : " << dot_plain << endl;
+        //사용자로부터 입력받은 x_vec과 beta_vec을 CKKS에 인코딩,암호화
+        Plaintext plain_x, plain_beta;
 
-        //내적 값을 CKKS에 인코딩,암호화
-        Plaintext plain_dot;
-        encoder.encode(dot_plain, scale, plain_dot);
-        Ciphertext enc_dot;
-        encryptor.encrypt(plain_dot, enc_dot);
+        size_t slot_count = encoder.slot_count();
+        vector<double> x_padded(slot_count, 0.0), beta_padded(slot_count, 0.0);
+        for (size_t i = 0; i < x_vec.size(); ++i) x_padded[i] = x_vec[i];
+        for (size_t i = 0; i < beta_vec.size(); ++i) beta_padded[i] = beta_vec[i];
+
+        encoder.encode(x_padded, scale, plain_x);
+        encoder.encode(beta_padded, scale, plain_beta);
+
+        Ciphertext ct_x, ct_beta;
+        encryptor.encrypt(plain_x, ct_x);
+        encryptor.encrypt(plain_beta, ct_beta);
+
+        //암호문 상태에서 내적이 필요하므로 element-wise 곱을 진행
+        Ciphertext ct_mul;
+        evaluator.multiply(ct_x, ct_beta, ct_mul);
+        evaluator.relinearize_inplace(ct_mul, relin_keys);
+        evaluator.rescale_to_next_inplace(ct_mul);
+
+        //rotate를 이용해 덧셈 진행
+        Ciphertext enc_dot=ct_mul;
+
+        //내적
+        size_t vec_size = x_vec.size();
+        parms_id_type parms = enc_dot.parms_id();
+
+        if (vec_size > 1) {
+            for (size_t i = 1; i < vec_size; i <<= 1) {
+                Ciphertext rotated;
+                evaluator.rotate_vector(enc_dot, i, gal_keys, rotated);
+                evaluator.add_inplace(enc_dot, rotated);
+            }   
+        }
 
         //x^3을 계산하기 위해 x^2을 먼저 계산
         Ciphertext enc_dot_sq;
@@ -120,6 +161,9 @@ int logistic_ckks_example()
         double coef3 = 0.81562 / 512.0;
         Plaintext plain_coef3;
         encoder.encode(coef3, scale, plain_coef3);
+        //곱셈 전에 평문의 레벨을 암호문에 맞춰줍니다
+        evaluator.mod_switch_to_inplace(plain_coef3, enc_dot.parms_id());
+
         Ciphertext enc_dot_coef3;
         evaluator.multiply_plain(enc_dot, plain_coef3, enc_dot_coef3);
         evaluator.rescale_to_next_inplace(enc_dot_coef3);
@@ -134,6 +178,8 @@ int logistic_ckks_example()
         double coef1 = -1.20096 / 8.0;
         Plaintext plain_coef1;
         encoder.encode(coef1, scale, plain_coef1);
+        evaluator.mod_switch_to_inplace(plain_coef1, enc_dot.parms_id());
+
         Ciphertext term1;
         evaluator.multiply_plain(enc_dot, plain_coef1, term1);
         evaluator.rescale_to_next_inplace(term1);
@@ -166,17 +212,6 @@ int logistic_ckks_example()
         // 복호화된 값 출력
         cout << "암호문 복호화 Sigmoid 근사 결과 : " << sigmoid_result[0] << endl;
 
-        // 평문 sigmoid 근사 계산
-        double plain_sigmoid = 0.5
-            + (-1.22096 / 8.0) * dot_plain
-            + (0.81562 / 512.0) * pow(dot_plain, 3);
-
-        cout << "평문 Sigmoid 근사 결과 : " << plain_sigmoid << endl;
-        cout << endl;
-
-        int final_result = (sigmoid_result[0] >= 0.5) ? 1 : 0;
-        string inference_label = (final_result == 1) ? "Positive(양성)입니다" : "Negative(음성)입니다";
-        cout << "암호문 기반 최종 추론 결과 (0.5 기준): " << final_result << " (" << inference_label << ")" << endl;
     }
     return 0;
 }

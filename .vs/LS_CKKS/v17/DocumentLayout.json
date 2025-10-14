@@ -7,7 +7,13 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:LS_CKKS\\LS_CKKS.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\examples\\6_rotation.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\src\\seal\\evaluator.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\src\\seal\\keygenerator.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\src\\seal\\context.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\examples\\5_ckks_basics.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
@@ -19,15 +25,6 @@
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\encryptionparams.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\src\\seal\\evaluator.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\src\\seal\\keygenerator.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\examples\\3_levels.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\examples\\2_encoders.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
@@ -35,9 +32,6 @@
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\examples\\8_performance.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\SEAL\\native\\examples\\4_bgv_basics.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\ckks.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
@@ -66,63 +60,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "evaluator.cpp",
-              "DocumentMoniker": "C:\\SEAL\\native\\src\\seal\\evaluator.cpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\evaluator.cpp",
-              "ToolTip": "C:\\SEAL\\native\\src\\seal\\evaluator.cpp",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\evaluator.cpp",
-              "ViewState": "AgIAAE8BAAAAAAAAAAArwGwBAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-30T17:14:37.37Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "6_rotation.cpp",
-              "DocumentMoniker": "C:\\SEAL\\native\\examples\\6_rotation.cpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\6_rotation.cpp",
-              "ToolTip": "C:\\SEAL\\native\\examples\\6_rotation.cpp",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\6_rotation.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAABLAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-18T08:28:18.605Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "4_bgv_basics.cpp",
-              "DocumentMoniker": "C:\\SEAL\\native\\examples\\4_bgv_basics.cpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\4_bgv_basics.cpp",
-              "ToolTip": "C:\\SEAL\\native\\examples\\4_bgv_basics.cpp",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\4_bgv_basics.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-18T08:28:10.547Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "3_levels.cpp",
-              "DocumentMoniker": "C:\\SEAL\\native\\examples\\3_levels.cpp",
-              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\3_levels.cpp",
-              "ToolTip": "C:\\SEAL\\native\\examples\\3_levels.cpp",
-              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\3_levels.cpp",
-              "ViewState": "AgIAADYBAAAAAAAAAAAAAOcAAAAGAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-18T08:28:02.547Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 8,
               "Title": "1_bfv_basics.cpp",
               "DocumentMoniker": "C:\\SEAL\\native\\examples\\1_bfv_basics.cpp",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\1_bfv_basics.cpp",
@@ -131,6 +73,19 @@
               "ViewState": "AgIAAJgBAAAAAAAAAAAAAKMBAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-17T07:26:18.611Z",
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "evaluator.cpp",
+              "DocumentMoniker": "C:\\SEAL\\native\\src\\seal\\evaluator.cpp",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\evaluator.cpp",
+              "ToolTip": "C:\\SEAL\\native\\src\\seal\\evaluator.cpp",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\evaluator.cpp",
+              "ViewState": "AgIAAKMAAAAAAAAAAAAcwLIAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-30T17:14:37.37Z",
               "EditorCaption": ""
             },
             {
@@ -141,14 +96,14 @@
               "RelativeDocumentMoniker": "LS_CKKS\\LS_CKKS.cpp",
               "ToolTip": "C:\\Users\\82108\\OneDrive\\\uBC14\uD0D5 \uD654\uBA74\\4-2\uD559\uAE30\\\uC5F0\uAD6C\uC2E4\uC778\uD134\uC2ED\\LS_CKKS\\LS_CKKS\\LS_CKKS.cpp",
               "RelativeToolTip": "LS_CKKS\\LS_CKKS.cpp",
-              "ViewState": "AgIAAGAAAAAAAAAAAAAAAGcAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAMcAAAAAAAAAAAAswMsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-08T01:32:40.347Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "7_serialization.cpp",
               "DocumentMoniker": "C:\\SEAL\\native\\examples\\7_serialization.cpp",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\7_serialization.cpp",
@@ -156,12 +111,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\7_serialization.cpp",
               "ViewState": "AgIAAMABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-18T08:28:25.259Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-18T08:28:25.259Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "5_ckks_basics.cpp",
               "DocumentMoniker": "C:\\SEAL\\native\\examples\\5_ckks_basics.cpp",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\5_ckks_basics.cpp",
@@ -169,12 +123,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\5_ckks_basics.cpp",
               "ViewState": "AgIAAAwBAAAAAAAAAAAAAD0BAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-17T07:02:50.423Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-17T07:02:50.423Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 7,
               "Title": "2_encoders.cpp",
               "DocumentMoniker": "C:\\SEAL\\native\\examples\\2_encoders.cpp",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\2_encoders.cpp",
@@ -182,12 +135,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\2_encoders.cpp",
               "ViewState": "AgIAAAUBAAAAAAAAAAAiwE0BAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-18T08:27:55.403Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-18T08:27:55.403Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "encryptionparams.h",
               "DocumentMoniker": "C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\encryptionparams.h",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\encryptionparams.h",
@@ -195,12 +147,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\encryptionparams.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAD4AAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-09-08T02:00:03.663Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T02:00:03.663Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 14,
               "Title": "publickey.h",
               "DocumentMoniker": "C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\publickey.h",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\publickey.h",
@@ -208,12 +159,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\publickey.h",
               "ViewState": "AgIAAOoAAAAAAAAAAAAkwAwBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-09-08T01:53:23.296Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T01:53:23.296Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 13,
               "Title": "context.h",
               "DocumentMoniker": "C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\context.h",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\context.h",
@@ -221,12 +171,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\context.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEYAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-09-08T01:50:45.628Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T01:50:45.628Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 10,
               "Title": "ckks.h",
               "DocumentMoniker": "C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\ckks.h",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\ckks.h",
@@ -234,12 +183,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\ckks.h",
               "ViewState": "AgIAAPsBAAAAAAAAAAAAACkCAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-09-08T01:49:37.133Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T01:49:37.133Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 11,
               "Title": "seal.h",
               "DocumentMoniker": "C:\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\seal.h",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\seal.h",
@@ -247,25 +195,37 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\SEAL\\include\\SEAL-4.1\\seal\\seal.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-09-08T01:49:25.336Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T01:49:25.336Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 2,
               "Title": "keygenerator.cpp",
               "DocumentMoniker": "C:\\SEAL\\native\\src\\seal\\keygenerator.cpp",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\keygenerator.cpp",
               "ToolTip": "C:\\SEAL\\native\\src\\seal\\keygenerator.cpp",
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\keygenerator.cpp",
-              "ViewState": "AgIAAAsAAAAAAAAAAAArwBkAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAAABwAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-30T16:58:51.646Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 3,
+              "Title": "context.h",
+              "DocumentMoniker": "C:\\SEAL\\native\\src\\seal\\context.h",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\context.h",
+              "ToolTip": "C:\\SEAL\\native\\src\\seal\\context.h",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\src\\seal\\context.h",
+              "ViewState": "AgIAABgBAAAAAAAAAAAAACQBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-10-14T11:30:48.585Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "8_performance.cpp",
               "DocumentMoniker": "C:\\SEAL\\native\\examples\\8_performance.cpp",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\8_performance.cpp",
@@ -273,12 +233,11 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\..\\..\\SEAL\\native\\examples\\8_performance.cpp",
               "ViewState": "AgIAAHcCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-18T08:28:31.97Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-18T08:28:31.97Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 12,
               "Title": "CMakeLists.txt",
               "DocumentMoniker": "C:\\Users\\82108\\OneDrive\\\uBC14\uD0D5 \uD654\uBA74\\4-2\uD559\uAE30\\\uC5F0\uAD6C\uC2E4\uC778\uD134\uC2ED\\LS_CKKS\\LS_CKKS\\CMakeLists.txt",
               "RelativeDocumentMoniker": "LS_CKKS\\CMakeLists.txt",
@@ -286,18 +245,16 @@
               "RelativeToolTip": "LS_CKKS\\CMakeLists.txt",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
-              "WhenOpened": "2025-09-08T01:31:03.411Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T01:31:03.411Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 15,
               "Title": "CMake \uAC1C\uC694 \uD398\uC774\uC9C0",
               "DocumentMoniker": "CMake \uAC1C\uC694 \uD398\uC774\uC9C0",
               "ToolTip": "CMake \uAC1C\uC694 \uD398\uC774\uC9C0",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-09-08T01:30:31.421Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T01:30:31.421Z"
             }
           ]
         }

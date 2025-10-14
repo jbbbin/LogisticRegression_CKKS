@@ -13,9 +13,8 @@
   },
   "ExpandedNodes": [
     "",
-    "\\LS_CKKS",
-    "\\out\\build"
+    "\\LS_CKKS"
   ],
-  "SelectedNode": "\\LS_CKKS\\LS_CKKS.cpp",
+  "SelectedNode": "\\CMakeLists.txt",
   "PreviewInSolutionExplorer": false
 }
