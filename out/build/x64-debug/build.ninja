@@ -86,6 +86,24 @@ build LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_CKKS.cpp.obj: CXX_COMPILER__LS_CKKS_unsc
   TARGET_COMPILE_PDB = LS_CKKS\CMakeFiles\LS_CKKS.dir\
   TARGET_PDB = LS_CKKS\LS_CKKS.pdb
 
+build LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_Train_CKKS.cpp.obj: CXX_COMPILER__LS_CKKS_unscanned_Debug C$:\Users\82108\OneDrive\바탕$ 화면\4-2학기\연구실인턴십\LS_CKKS\LS_CKKS\LS_Train_CKKS.cpp || cmake_object_order_depends_target_LS_CKKS
+  DEFINES = -D_ITERATOR_DEBUG_LEVEL=2
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI /MDd
+  INCLUDES = -external:I"C:\Program Files (x86)\SEAL\include\SEAL-4.1" -external:W0
+  OBJECT_DIR = LS_CKKS\CMakeFiles\LS_CKKS.dir
+  OBJECT_FILE_DIR = LS_CKKS\CMakeFiles\LS_CKKS.dir
+  TARGET_COMPILE_PDB = LS_CKKS\CMakeFiles\LS_CKKS.dir\
+  TARGET_PDB = LS_CKKS\LS_CKKS.pdb
+
+build LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_Inference_CKKS.cpp.obj: CXX_COMPILER__LS_CKKS_unscanned_Debug C$:\Users\82108\OneDrive\바탕$ 화면\4-2학기\연구실인턴십\LS_CKKS\LS_CKKS\LS_Inference_CKKS.cpp || cmake_object_order_depends_target_LS_CKKS
+  DEFINES = -D_ITERATOR_DEBUG_LEVEL=2
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI /MDd
+  INCLUDES = -external:I"C:\Program Files (x86)\SEAL\include\SEAL-4.1" -external:W0
+  OBJECT_DIR = LS_CKKS\CMakeFiles\LS_CKKS.dir
+  OBJECT_FILE_DIR = LS_CKKS\CMakeFiles\LS_CKKS.dir
+  TARGET_COMPILE_PDB = LS_CKKS\CMakeFiles\LS_CKKS.dir\
+  TARGET_PDB = LS_CKKS\LS_CKKS.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target LS_CKKS
@@ -94,7 +112,7 @@ build LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_CKKS.cpp.obj: CXX_COMPILER__LS_CKKS_unsc
 #############################################
 # Link the executable LS_CKKS\LS_CKKS.exe
 
-build LS_CKKS\LS_CKKS.exe: CXX_EXECUTABLE_LINKER__LS_CKKS_Debug LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_CKKS.cpp.obj | C$:\Program$ Files$ (x86)\SEAL\lib\seal-4.1.lib
+build LS_CKKS\LS_CKKS.exe: CXX_EXECUTABLE_LINKER__LS_CKKS_Debug LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_CKKS.cpp.obj LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_Train_CKKS.cpp.obj LS_CKKS\CMakeFiles\LS_CKKS.dir\LS_Inference_CKKS.cpp.obj | C$:\Program$ Files$ (x86)\SEAL\lib\seal-4.1.lib
   FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -ZI
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = "C:\Program Files (x86)\SEAL\lib\seal-4.1.lib"  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib

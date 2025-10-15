@@ -3,7 +3,7 @@
 #
 
 # 이 프로젝트의 실행 파일에 소스를 추가합니다.
-add_executable (LS_CKKS "LS_CKKS.cpp" "LS_CKKS.h")
+add_executable (LS_CKKS "LS_CKKS.cpp" "LS_CKKS.h" "LS_Train_CKKS.cpp" "LS_Inference_CKKS.cpp" "LS_Inference_CKKS.h" "LS_Train_ckks.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET LS_CKKS PROPERTY CXX_STANDARD 20)
