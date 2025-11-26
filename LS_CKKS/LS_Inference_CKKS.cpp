@@ -10,37 +10,10 @@
 using namespace std;
 using namespace seal;
 
-void run_inference()
+void run_inference(SEALContext& context,CKKSEncoder& encoder,Evaluator& evaluator,Encryptor& encryptor,Decryptor& decryptor,RelinKeys& relin_keys,GaloisKeys& gal_keys, Ciphertext& trained_beta, double scale)
 {
-
-    //임의로 정의한 가중치 벡터 beta값들
-    vector<double> beta_vec = { 0.15, -0.8, 0.5, -0.2, 1.1, -0.7, 0.3, -1.2, 0.9, -0.4, 1.3, -0.6, 0.7, -1.0, 0.4, 0.9, -1.3, 0.6, 1.0 };
-
-    EncryptionParameters params(scheme_type::ckks);
-    size_t poly_modulus_degree = 16384;
-    params.set_poly_modulus_degree(poly_modulus_degree);
-    params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 40, 60 }));
-
-    double scale = pow(2.0, 40);
-
-    SEALContext context(params);
-    KeyGenerator keygen(context);
-    SecretKey secret_key = keygen.secret_key();
-    PublicKey public_key;
-    keygen.create_public_key(public_key);
-    RelinKeys relin_keys;
-    keygen.create_relin_keys(relin_keys);
-    GaloisKeys gal_keys;
-    keygen.create_galois_keys(gal_keys);
-
-    //Public,Secret, RelinKeys, GaloisKeys 등 필요한 키 생성
-
-    CKKSEncoder encoder(context);
-    Encryptor encryptor(context, public_key);
-    Evaluator evaluator(context);
-    Decryptor decryptor(context, secret_key);
-
     string user_input_line;
+    cout << "입력할 feature들을 ','로 구분해 입력하세요: ";
     getline(cin, user_input_line);
 
     vector<double> x_vec;
@@ -56,8 +29,6 @@ void run_inference()
     size_t slot_count = encoder.slot_count();
     vector<double> x_padded(slot_count, 0.0), beta_padded(slot_count, 0.0);
     for (size_t i = 0; i < x_vec.size(); ++i) x_padded[i] = x_vec[i];
-    for (size_t i = 0; i < beta_vec.size(); ++i) beta_padded[i] = beta_vec[i];
-
 
     //sigmoid함수 다항근사  -> 여기에서는 g3(x) = 0.5 - 1.22096 * (x/8) +0.81562*(x/8)^3 을 사용함
      // 모든 샘플에 대해 추론을 반복합니다.
@@ -66,24 +37,21 @@ void run_inference()
         cout << "\n=======================================================" << endl;
         cout << sample_idx << "번째 Sample Inference" << endl;
 
-        //사용자로부터 입력받은 x_vec과 beta_vec을 CKKS에 인코딩,암호화
+        //사용자로부터 입력받은 x_vec을 CKKS에 인코딩,암호화
         Plaintext plain_x, plain_beta;
 
         size_t slot_count = encoder.slot_count();
         vector<double> x_padded(slot_count, 0.0), beta_padded(slot_count, 0.0);
         for (size_t i = 0; i < x_vec.size(); ++i) x_padded[i] = x_vec[i];
-        for (size_t i = 0; i < beta_vec.size(); ++i) beta_padded[i] = beta_vec[i];
 
         encoder.encode(x_padded, scale, plain_x);
-        encoder.encode(beta_padded, scale, plain_beta);
 
-        Ciphertext ct_x, ct_beta;
+        Ciphertext ct_x;
         encryptor.encrypt(plain_x, ct_x);
-        encryptor.encrypt(plain_beta, ct_beta);
 
         //암호문 상태에서 내적이 필요하므로 element-wise 곱을 진행
         Ciphertext ct_mul;
-        evaluator.multiply(ct_x, ct_beta, ct_mul);
+        evaluator.multiply(ct_x, trained_beta, ct_mul);
         evaluator.relinearize_inplace(ct_mul, relin_keys);
         evaluator.rescale_to_next_inplace(ct_mul);
 

@@ -1,3 +1,5 @@
+#include "LS_Train_CKKS.h" 
+
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -44,41 +46,14 @@ void load_data(const string& filename,vector<vector<double>>& X, vector<double>&
     file.close();
 }
 
-int logistic_train()
+Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& evaluator,Encryptor& encryptor,Decryptor& decryptor,RelinKeys& relin_keys,GaloisKeys& gal_keys, double scale)
 {
-    EncryptionParameters params(scheme_type::ckks);
-    size_t poly_modulus_degree = 32768;
-    params.set_poly_modulus_degree(poly_modulus_degree);
-    params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, { 60, 40, 40, 40, 40, 40, 40, 60 }));
-    double scale = pow(2.0, 40);
-
-    SEALContext context(params);
-    KeyGenerator keygen(context);
-    SecretKey secret_key = keygen.secret_key();
-    PublicKey public_key;
-    keygen.create_public_key(public_key);
-    RelinKeys relin_keys;
-    keygen.create_relin_keys(relin_keys);
-    GaloisKeys gal_keys;
-    keygen.create_galois_keys(gal_keys);
-
-    Encryptor encryptor(context, public_key);
-    Evaluator evaluator(context);
-    Decryptor decryptor(context, secret_key);
-    CKKSEncoder encoder(context);
     size_t slot_count = encoder.slot_count();
 
     vector<vector<double>> all_X; // 데이터셋 전체의 특징(features)
     vector<double> all_y;         // 데이터셋 전체의 결과 레이블
 
-    try {
-        load_data("C:/Users/82108/OneDrive/바탕 화면/4-2학기/연구실인턴십/LS_CKKS/LS_CKKS/LBW.txt", all_X, all_y);
-        cout << "Txt파일에 총 " << all_X.size() << "개의 샘플이 존재합니다" << endl;
-    }
-    catch (const exception& e) {
-        cerr << "오류 발생: " << e.what() << endl;
-        return 1;
-    }
+    load_data("LBW.txt", all_X, all_y);
 
     size_t num_samples = all_X.size();
     size_t num_features = all_X[0].size(); // bias 포함
@@ -108,9 +83,211 @@ int logistic_train()
     encryptor.encrypt(plain_Z, ct_Z);
 
     vector<double> beta_vec(num_features, 0.01); //논문에 초기 값을 random으로 잡는다고 되어있기에
+    
 
-}
+    // beta_vec의 내용을 n번 만큼 beta_matrix_row_order에 이어 붙인다. row_order로 
+    vector<double> beta_matrix_row_order;
+    beta_matrix_row_order.reserve(num_samples * num_features);
+    for (size_t i = 0; i < num_samples; ++i) {
+        beta_matrix_row_order.insert(beta_matrix_row_order.end(), beta_vec.begin(), beta_vec.end());
+    }
 
-int main() {
-    logistic_train();
+    Plaintext plain_beta;
+    encoder.encode(beta_matrix_row_order, scale, plain_beta);
+    Ciphertext ct_beta;
+    encryptor.encrypt(plain_beta, ct_beta);
+
+    Ciphertext ct_v;
+    ct_v = ct_beta;
+
+    Ciphertext ct_beta_next, ct_v_next;
+
+    int max_iter = 7;
+    for (int iter = 0; iter < max_iter; ++iter)
+    {
+        Ciphertext ct_beta_prev = ct_beta;
+        //논문에서 말한 step1과정
+        Ciphertext ct1;
+        evaluator.multiply(ct_v, ct_Z, ct1);
+        evaluator.relinearize_inplace(ct1, relin_keys);
+        evaluator.rescale_to_next_inplace(ct1);
+
+        //step2 slotwise 덧셈과 rotate를 통해 내적값 구하기
+        int i = 1;
+        while (i < num_features) {
+            Ciphertext rotated;
+            evaluator.rotate_vector(ct1, static_cast<int>(i), gal_keys, rotated);
+            evaluator.add_inplace(ct1, rotated);
+            i <<= 1;
+        }
+        Ciphertext ct2 = ct1;
+
+
+        //step3 masking하는거
+        vector<double> mask_firstcol(num_samples * num_features, 0.0);
+        for (size_t i = 0; i < num_samples; ++i) {
+            mask_firstcol[i * num_features] = 1.0; // 각 행의 첫 열만 1
+        }
+
+        Plaintext plain_mask;
+        encoder.encode(mask_firstcol, scale, plain_mask);
+        if (plain_mask.parms_id() != ct2.parms_id()) {
+            evaluator.mod_switch_to_inplace(plain_mask, ct2.parms_id());
+        }
+
+        Ciphertext ct3;
+        evaluator.multiply_plain(ct2, plain_mask, ct3);
+        evaluator.rescale_to_next_inplace(ct3);
+
+        //step4 Replicate
+        i = 1;
+        while (i < num_features) {
+            Ciphertext rotated;
+            evaluator.rotate_vector(ct3, -static_cast<int>(i), gal_keys, rotated); //내적할때랑 반대방향(오른쪽으로) rotate를 해준 후 더해줘야함
+            evaluator.add_inplace(ct3, rotated);
+            i <<= 1;
+        }
+
+        //step5 근사 sigmoid함수에 값 대입. g(x) = 0.5 - 1.20096*(x/8) + 0.81562*(x/8)^3
+        Ciphertext enc_dot = ct3;   // inference 코드와 동일하게
+        Ciphertext ct5;
+
+        // x^2
+        Ciphertext enc_dot_sq;
+        evaluator.square(enc_dot, enc_dot_sq);
+        evaluator.relinearize_inplace(enc_dot_sq, relin_keys);
+        evaluator.rescale_to_next_inplace(enc_dot_sq);
+
+        // (0.81562/512) * x
+        double coef3 = 0.81562 / 512.0;                 // 0.81562*(x/8)^3 == (0.81562/512)*x^3
+        Plaintext plain_coef3;
+        encoder.encode(coef3, enc_dot.scale(), plain_coef3);
+        evaluator.mod_switch_to_inplace(plain_coef3, enc_dot.parms_id());
+
+        Ciphertext enc_dot_coef3;
+        evaluator.multiply_plain(enc_dot, plain_coef3, enc_dot_coef3);
+        evaluator.rescale_to_next_inplace(enc_dot_coef3);
+
+        // term3 = (0.81562/512)*x^3 = enc_dot_sq * enc_dot_coef3
+        if (enc_dot_sq.parms_id() != enc_dot_coef3.parms_id())
+            evaluator.mod_switch_to_inplace(enc_dot_sq, enc_dot_coef3.parms_id());
+        Ciphertext term3;
+        evaluator.multiply(enc_dot_sq, enc_dot_coef3, term3);
+        evaluator.relinearize_inplace(term3, relin_keys);
+        evaluator.rescale_to_next_inplace(term3);
+
+        // term1 = (-1.20096/8)*x
+        double coef1 = -1.20096 / 8.0;
+        Plaintext plain_coef1;
+        encoder.encode(coef1, enc_dot.scale(), plain_coef1);
+        evaluator.mod_switch_to_inplace(plain_coef1, enc_dot.parms_id());
+
+        Ciphertext term1;
+        evaluator.multiply_plain(enc_dot, plain_coef1, term1);
+        evaluator.rescale_to_next_inplace(term1);
+
+        // 상수항 0.5 (term들과 scale/level 맞추기)
+        Plaintext plain_const;
+        encoder.encode(0.5, term3.scale(), plain_const);
+        evaluator.mod_switch_to_inplace(plain_const, term3.parms_id());
+
+        // 스케일/레벨 정렬 후 합치기
+        if (term1.parms_id() != term3.parms_id())
+            evaluator.mod_switch_to_inplace(term1, term3.parms_id());
+        term1.scale() = term3.scale();// (스케일 근사치 맞춤)
+
+        Ciphertext sigmoid_enc;
+        evaluator.add(term1, term3, sigmoid_enc);      // term1 + term3
+        evaluator.add_plain_inplace(sigmoid_enc, plain_const); // + 0.5
+
+        ct5 = sigmoid_enc;// 최종 g(z_i^T beta)
+
+        //step 6  step5값이랑 ct_Z 내적
+        if (ct_Z.parms_id() != ct5.parms_id())
+            evaluator.mod_switch_to_inplace(ct_Z, ct5.parms_id());
+
+        Ciphertext ct6;
+        evaluator.multiply(ct5, ct_Z, ct6);
+        evaluator.relinearize_inplace(ct6, relin_keys);
+        evaluator.rescale_to_next_inplace(ct6);
+
+        //step 7 행 합산
+        size_t N = num_samples;
+        size_t total = N * num_features;
+
+        i = num_features;
+        while (i < total) {
+            Ciphertext rotated;
+            evaluator.rotate_vector(ct6, i, gal_keys, rotated);
+            evaluator.add_inplace(ct6, rotated);
+            i <<= 1;
+        }
+        Ciphertext ct7 = ct6;
+
+        //step 8 beta업데이트
+        double alpha_t = 10;
+        double learn_rate = alpha_t / static_cast<double>(num_samples); // alpha/n
+
+        // (α/n) 평문 준비: ct7와 scale/level 맞추기
+        Plaintext pt_lr;
+        encoder.encode(learn_rate, ct7.scale(), pt_lr);
+        if (pt_lr.parms_id() != ct7.parms_id())
+            evaluator.mod_switch_to_inplace(pt_lr, ct7.parms_id()); //scale level 맞추기
+
+        //ct8 = (alpha/n) * ct7
+        Ciphertext ct8;
+        evaluator.multiply_plain(ct7, pt_lr, ct8);
+        evaluator.rescale_to_next_inplace(ct8);
+
+        // ct8 수준에 맞춰 ct_beta를 scale과 parms_id 내려줌
+        if (ct_v.parms_id() != ct8.parms_id())
+            evaluator.mod_switch_to_inplace(ct_v, ct8.parms_id());
+
+        if (ct_v.scale() != ct8.scale())
+            ct_v.scale() = ct8.scale();
+
+        //beta를 새로운 beta로 업데이트
+        evaluator.add(ct_v, ct8, ct_beta_next);
+
+        //Step 9 Nasterov 방식 적용
+        // v^{(t+1)} = (1 - γ_t) * β^{(t+1)} + γ_t * β^{(t)}
+        double gamma_t = 0.9; //논문처럼 0 < γ_t < 1, 보통 0.9 근처를 사용
+
+        // (1 - γ_t), γ_t 를 평문으로 인코딩
+        Plaintext plain_gamma, plain_one_minus_gamma;
+        encoder.encode(gamma_t, ct_beta_next.scale(), plain_gamma);
+        encoder.encode(1.0 - gamma_t, ct_beta_next.scale(), plain_one_minus_gamma);
+
+        // parms_id 맞추기
+        if (plain_gamma.parms_id() != ct_beta_next.parms_id())
+            evaluator.mod_switch_to_inplace(plain_gamma, ct_beta_next.parms_id());
+        if (plain_one_minus_gamma.parms_id() != ct_beta_next.parms_id())
+            evaluator.mod_switch_to_inplace(plain_one_minus_gamma, ct_beta_next.parms_id());
+
+        // γ_t * β^{(t)}   → term_old_beta
+        Ciphertext term_old_beta;
+        evaluator.multiply_plain(ct_beta_prev, plain_gamma, term_old_beta);
+        evaluator.rescale_to_next_inplace(term_old_beta);
+
+        // (1 - γ_t) * β^{(t+1)} → term_new_beta
+        Ciphertext term_new_beta;
+        evaluator.multiply_plain(ct_beta_next, plain_one_minus_gamma, term_new_beta);
+        evaluator.rescale_to_next_inplace(term_new_beta);
+
+        // level / scale 정렬
+        if (term_old_beta.parms_id() != term_new_beta.parms_id())
+            evaluator.mod_switch_to_inplace(term_old_beta, term_new_beta.parms_id());
+        term_old_beta.scale() = term_new_beta.scale();
+
+        // v^{(t+1)} = term_old_beta + term_new_beta
+        evaluator.add(term_old_beta, term_new_beta, ct_v_next);
+
+        // 다음 iter을 위해 현재 β, v 업데이트
+        ct_beta = ct_beta_next;   // β^{(t)} ← β^{(t+1)}
+        ct_v = ct_v_next;      // v^{(t)} ← v^{(t+1)}
+    }
+
+
+
+    return ct_beta_next;
 }
