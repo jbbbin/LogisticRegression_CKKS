@@ -5,131 +5,100 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <cmath>        // exp, pow 등
 #include "seal/seal.h"
 
 using namespace std;
 using namespace seal;
 
-void run_inference(SEALContext& context,CKKSEncoder& encoder,Evaluator& evaluator,Encryptor& encryptor,Decryptor& decryptor,RelinKeys& relin_keys,GaloisKeys& gal_keys, Ciphertext& trained_beta, double scale)
+// Train에서 사용한 load_data 재사용 (정의는 LS_Train_CKKS.cpp 쪽에 있음)
+void load_data(const string& filename,
+               vector<vector<double>>& X,
+               vector<double>& y);
+
+void run_inference(SEALContext& context,
+                   CKKSEncoder& encoder,
+                   Evaluator& evaluator,
+                   Encryptor& encryptor,
+                   Decryptor& decryptor,
+                   RelinKeys& relin_keys,
+                   GaloisKeys& gal_keys,
+                   Ciphertext& trained_beta,
+                   double scale)
 {
-    string user_input_line;
-    cout << "입력할 feature들을 ','로 구분해 입력하세요: ";
-    getline(cin, user_input_line);
+    // 1) Train 때와 동일한 데이터셋 로드 (Edinburgh)
+    vector<vector<double>> X;
+    vector<double> y;
+    load_data("Edinburgh.txt", X, y);
 
-    vector<double> x_vec;
-    stringstream ss(user_input_line);
-    string value;
+    size_t num_samples  = X.size();
+    if (num_samples == 0) {
+        cout << "[Inference] 데이터가 비어 있습니다." << endl;
+        return;
+    }
+    size_t num_features = X[0].size(); // bias + padding 포함
 
-    // bias 항에 해당하는 1.0을 맨 앞에 추가 (기존 로직 유지)
-    x_vec.push_back(1.0);
-    while (getline(ss, value, ',')) {
-        x_vec.push_back(stod(value));
+    cout << "\n=======================================================" << endl;
+    cout << "[Inference] Evaluating accuracy on dataset (" 
+         << num_samples << " samples)" << endl;
+
+    // 2) 학습된 beta 암호문을 복호화해서 평문 beta 벡터로 추출
+    Plaintext plain_beta;
+    decryptor.decrypt(trained_beta, plain_beta);
+
+    vector<double> beta_decoded;
+    encoder.decode(plain_beta, beta_decoded);
+
+    if (beta_decoded.size() < num_features) {
+        cout << "[Inference] 디코드된 beta 크기가 예상보다 작습니다. "
+             << "beta_decoded.size() = " << beta_decoded.size()
+             << ", num_features = " << num_features << endl;
+        return;
     }
 
-    size_t slot_count = encoder.slot_count();
-    vector<double> x_padded(slot_count, 0.0), beta_padded(slot_count, 0.0);
-    for (size_t i = 0; i < x_vec.size(); ++i) x_padded[i] = x_vec[i];
+    // logistic_train에서 beta를 row-order로
+    // [β0 ... β_{d-1} | β0 ... β_{d-1} | ...] 형태로 채웠으므로
+    // 첫 num_features 개만 실제 β로 사용
+    vector<double> beta_vec(beta_decoded.begin(),
+                            beta_decoded.begin() + num_features);
 
-    //sigmoid함수 다항근사  -> 여기에서는 g3(x) = 0.5 - 1.22096 * (x/8) +0.81562*(x/8)^3 을 사용함
-     // 모든 샘플에 대해 추론을 반복합니다.
-    for (size_t sample_idx = 0; sample_idx < 10; ++sample_idx)
+    // 3) 전체 샘플에 대해 평문 inference 수행
+    //    g5(x) = 0.5 - 1.53048*(x/8) + 2.3533056*(x/8)^3 - 1.3511295*(x/8)^5
+    int correct = 0;
+
+    for (size_t i = 0; i < num_samples; ++i)
     {
-        cout << "\n=======================================================" << endl;
-        cout << sample_idx << "번째 Sample Inference" << endl;
+        const vector<double>& x = X[i];
 
-        //사용자로부터 입력받은 x_vec을 CKKS에 인코딩,암호화
-        Plaintext plain_x, plain_beta;
-
-        size_t slot_count = encoder.slot_count();
-        vector<double> x_padded(slot_count, 0.0), beta_padded(slot_count, 0.0);
-        for (size_t i = 0; i < x_vec.size(); ++i) x_padded[i] = x_vec[i];
-
-        encoder.encode(x_padded, scale, plain_x);
-
-        Ciphertext ct_x;
-        encryptor.encrypt(plain_x, ct_x);
-
-        //암호문 상태에서 내적이 필요하므로 element-wise 곱을 진행
-        Ciphertext ct_mul;
-        evaluator.multiply(ct_x, trained_beta, ct_mul);
-        evaluator.relinearize_inplace(ct_mul, relin_keys);
-        evaluator.rescale_to_next_inplace(ct_mul);
-
-        //rotate를 이용해 덧셈 진행
-        Ciphertext enc_dot = ct_mul;
-
-        //내적
-        size_t vec_size = x_vec.size();
-        parms_id_type parms = enc_dot.parms_id();
-
-        if (vec_size > 1) {
-            for (size_t i = 1; i < vec_size; i <<= 1) { //shift연산을 통해 논문 내용과 같이 log배 만큼으로 복잡도 감소시킴
-                Ciphertext rotated;
-                evaluator.rotate_vector(enc_dot, i, gal_keys, rotated);
-                evaluator.add_inplace(enc_dot, rotated);
-            }
+        // z = β^T x
+        double z = 0.0;
+        for (size_t j = 0; j < num_features; ++j) {
+            z += beta_vec[j] * x[j];
         }
 
-        //x^3을 계산하기 위해 x^2을 먼저 계산
-        Ciphertext enc_dot_sq;
-        evaluator.square(enc_dot, enc_dot_sq);
-        evaluator.relinearize_inplace(enc_dot_sq, relin_keys);
-        evaluator.rescale_to_next_inplace(enc_dot_sq);
+        // 5차 sigmoid 근사 (Train 때와 동일한 다항식 사용)
+        double t  = z / 8.0;
+        double t2 = t * t;
+        double t3 = t2 * t;
+        double t5 = t3 * t2;
 
-        //x^3을 구하기 위한 2번째 과정 (0.81562/8) * x
-        double coef3 = 0.81562 / 512.0;
-        Plaintext plain_coef3;
-        encoder.encode(coef3, scale, plain_coef3);
-        //곱셈 전에 평문의 레벨을 암호문에 맞춰줍니다
-        evaluator.mod_switch_to_inplace(plain_coef3, enc_dot.parms_id());
+        double prob = 0.5
+                    - 1.53048   * t
+                    + 2.3533056 * t3
+                    - 1.3511295 * t5;
 
-        Ciphertext enc_dot_coef3;
-        evaluator.multiply_plain(enc_dot, plain_coef3, enc_dot_coef3);
-        evaluator.rescale_to_next_inplace(enc_dot_coef3);
+        // y는 {-1, +1} 형태이므로, 0.5 기준으로 예측 레이블을 {-1,+1}로 매핑
+        int pred_label = (prob >= 0.5) ? 1 : -1;
 
-        // (0.81562/8) * x^3 구하는 과정(앞서 구해둔 두 개를 곱하는 과정)
-        Ciphertext term3;
-        evaluator.multiply(enc_dot_sq, enc_dot_coef3, term3);
-        evaluator.relinearize_inplace(term3, relin_keys);
-        evaluator.rescale_to_next_inplace(term3);
-
-        //1차항 계산 (-1.20096/8) * x
-        double coef1 = -1.20096 / 8.0;
-        Plaintext plain_coef1;
-        encoder.encode(coef1, scale, plain_coef1);
-        evaluator.mod_switch_to_inplace(plain_coef1, enc_dot.parms_id());
-
-        Ciphertext term1;
-        evaluator.multiply_plain(enc_dot, plain_coef1, term1);
-        evaluator.rescale_to_next_inplace(term1);
-
-        //상수항 encoding
-        Plaintext plain_const;
-        encoder.encode(0.5, scale, plain_const);
-
-        //term1의 레벨은 2이고 term3의 레벨은 1이어서 scale 맞추기가 필요함
-        term1.scale() = pow(2.0, 40);
-        term3.scale() = pow(2.0, 40);
-
-        //덧셈을 하기 위해 parms_id 맞추기
-        parms_id_type last_parms_id = term3.parms_id();
-        evaluator.mod_switch_to_inplace(term1, last_parms_id);
-        evaluator.mod_switch_to_inplace(plain_const, last_parms_id);
-
-        //방금까지 준비한 term1 term3 plain_const를 합치는 과정-->최종결과
-        Ciphertext sigmoid_enc;
-        evaluator.add(term1, term3, sigmoid_enc);
-        evaluator.add_plain_inplace(sigmoid_enc, plain_const);
-
-        //복호화 및 디코딩
-        Plaintext sigmoid_plain;
-        decryptor.decrypt(sigmoid_enc, sigmoid_plain); //복호화 한 내용을 sigmoid_plain에 저장
-
-        vector<double> sigmoid_result;
-        encoder.decode(sigmoid_plain, sigmoid_result);
-
-        // 복호화된 값 출력
-        cout << "암호문 복호화 Sigmoid 근사 결과 : " << sigmoid_result[0] << endl;
-
+        if (pred_label == static_cast<int>(y[i])) {
+            ++correct;
+        }
     }
+
+    double acc = static_cast<double>(correct) / static_cast<double>(num_samples);
+
+    cout << "Correct: " << correct << " / " << num_samples << endl;
+    cout << "Accuracy (plain inference using HE-trained model + 5th-order sigmoid): "
+         << acc * 100.0 << " %" << endl;
+    cout << "=======================================================\n";
 }

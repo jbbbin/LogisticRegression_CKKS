@@ -1,3 +1,8 @@
+#pragma once
+#include "seal/seal.h"
+
+using namespace seal;
+
 Ciphertext logistic_train(SEALContext& context,
     CKKSEncoder& encoder,
     Evaluator& evaluator,
