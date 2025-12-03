@@ -1,33 +1,33 @@
-#include "LS_Train_CKKS.h" 
+#include "LS_Train_Honer_CKKS.h" 
 
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <iostream>
 #include <vector>
-#include <cmath> // ceil, log2 »ç¿ëÀ» À§ÇØ ÇÊ¿ä
-#include <chrono> // Enc time / Learn time ÃøÁ¤À» À§ÇÑ chrono
+#include <cmath> // ceil, log2 ì‚¬ìš©ì„ ìœ„í•´ í•„ìš”
+#include <chrono> // Enc time / Learn time ì¸¡ì •ì„ ìœ„í•œ chrono
 #include "seal/seal.h"
 
 using namespace std;
 using namespace seal;
 using namespace std::chrono; 
 
-// [µ¥ÀÌÅÍ ·Îµù] Edinburgh µ¥ÀÌÅÍ¼Â
-void load_data(const string& filename, vector<vector<double>>& X, vector<double>& y) {
+// [ë°ì´í„° ë¡œë”©] Edinburgh ë°ì´í„°ì…‹
+void load_data_honer(const string& filename, vector<vector<double>>& X, vector<double>& y) {
     ifstream file(filename);
     if (!file.is_open()) {
-        throw runtime_error("ÆÄÀÏÀ» ¿­ ¼ö ¾ø½À´Ï´Ù: " + filename);
+        throw runtime_error("íŒŒì¼ì„ ì—´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: " + filename);
     }
 
     string line;
-    getline(file, line); // Çì´õ ¹«½Ã
+    getline(file, line); // í—¤ë” ë¬´ì‹œ
 
     while (getline(file, line)) {
         stringstream ss(line);
         string value;
 
-        // ÇÑ ÁÙ ÀüÃ¼¸¦ ¸ÕÀú ¼ıÀÚ º¤ÅÍ·Î ÀĞ´Â´Ù.
+        // í•œ ì¤„ ì „ì²´ë¥¼ ë¨¼ì € ìˆ«ì ë²¡í„°ë¡œ ì½ëŠ”ë‹¤.
         vector<double> row_values;
         while (getline(ss, value, ',')) {
             if (!value.empty())
@@ -35,22 +35,22 @@ void load_data(const string& filename, vector<vector<double>>& X, vector<double>
         }
         if (row_values.empty()) continue;
 
-        // y°ª Ã³¸®  (Edinburgh.txt¿¡¼­´Â ¸¶Áö¸· ÄÃ·³ÀÌ y)
+        // yê°’ ì²˜ë¦¬  (Edinburgh.txtì—ì„œëŠ” ë§ˆì§€ë§‰ ì»¬ëŸ¼ì´ y)
         double y_raw = row_values.back();
-        row_values.pop_back(); // ³ª¸ÓÁö´Â X·Î »ç¿ë
+        row_values.pop_back(); // ë‚˜ë¨¸ì§€ëŠ” Xë¡œ ì‚¬ìš©
         if (y_raw == 0.0) y.push_back(-1.0);
         else              y.push_back(1.0);
 
-        // X°ª Ã³¸®
+        // Xê°’ ì²˜ë¦¬
         vector<double> row;
         
-        // 1. Bias Ç× Ãß°¡ (¸Ç ¾Õ)
+        // 1. Bias í•­ ì¶”ê°€ (ë§¨ ì•)
         row.push_back(1.0);
 
-        // 2. Feature Ãß°¡ (¸¶Áö¸· y¸¦ »« ³ª¸ÓÁö °ªµé)
+        // 2. Feature ì¶”ê°€ (ë§ˆì§€ë§‰ yë¥¼ ëº€ ë‚˜ë¨¸ì§€ ê°’ë“¤)
         row.insert(row.end(), row_values.begin(), row_values.end());
 
-        // 3. ÆĞµù (2ÀÇ °ÅµìÁ¦°öÀ¸·Î) - ¼Óµµ ÃÖÀûÈ­¿ë
+        // 3. íŒ¨ë”© (2ì˜ ê±°ë“­ì œê³±ìœ¼ë¡œ) - ì†ë„ ìµœì í™”ìš©
         size_t current_size = row.size();
         size_t power_of_two_size = 1;
         while (power_of_two_size < current_size) {
@@ -66,49 +66,49 @@ void load_data(const string& filename, vector<vector<double>>& X, vector<double>
     file.close();
 }
 
-Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& evaluator,Encryptor& encryptor,Decryptor& decryptor,RelinKeys& relin_keys,GaloisKeys& gal_keys, double scale)
+Ciphertext logistic_train_honer(SEALContext& context, CKKSEncoder& encoder,Evaluator& evaluator,Encryptor& encryptor,Decryptor& decryptor,RelinKeys& relin_keys,GaloisKeys& gal_keys, double scale)
 {
     size_t slot_count = encoder.slot_count();
 
-    vector<vector<double>> all_X; // µ¥ÀÌÅÍ¼Â ÀüÃ¼ÀÇ Æ¯Â¡(features)
-    vector<double> all_y; 	      // µ¥ÀÌÅÍ¼Â ÀüÃ¼ÀÇ °á°ú ·¹ÀÌºí
+    vector<vector<double>> all_X; // ë°ì´í„°ì…‹ ì „ì²´ì˜ íŠ¹ì§•(features)
+    vector<double> all_y; 	      // ë°ì´í„°ì…‹ ì „ì²´ì˜ ê²°ê³¼ ë ˆì´ë¸”
 
-    load_data("LBW.txt", all_X, all_y);
+    load_data_honer("Edinburgh.txt", all_X, all_y);
 
     size_t num_samples = all_X.size();
-    size_t num_features = all_X[0].size(); // bias Æ÷ÇÔ
+    size_t num_features = all_X[0].size(); // bias í¬í•¨
 
-    // z = y*x µ¥ÀÌÅÍ¼Â »ı¼º
-    // all_X¸¦ º¹»çÇÏ°í, °¢ Çà¿¡ ÇØ´çÇÏ´Â y°ªÀ» °öÇØÁÜ(y°ªÀº 1 or -1).
+    // z = y*x ë°ì´í„°ì…‹ ìƒì„±
+    // all_Xë¥¼ ë³µì‚¬í•˜ê³ , ê° í–‰ì— í•´ë‹¹í•˜ëŠ” yê°’ì„ ê³±í•´ì¤Œ(yê°’ì€ 1 or -1).
     vector<vector<double>> all_Z = all_X;
     for (size_t i = 0; i < num_samples; ++i) {
-        double y_val = all_y[i]; // y´Â ÀÌ¹Ì {-1, 1} »óÅÂ
+        double y_val = all_y[i]; // yëŠ” ì´ë¯¸ {-1, 1} ìƒíƒœ
 
         for (size_t j = 0; j < num_features; ++j) {
-            all_Z[i][j] *= y_val; // all_XÀÇ °¢ ¿ø¼Ò¿¡ y°ªÀ» °öÇØ Z¸¦ ¿Ï¼º
+            all_Z[i][j] *= y_val; // all_Xì˜ ê° ì›ì†Œì— yê°’ì„ ê³±í•´ Zë¥¼ ì™„ì„±
         }
     }
 
-    //ÀüÃ¼ µ¥ÀÌÅÍ¼Â Z¸¦ Çà ¿ì¼± ¼ø¼­(row-order)
+    //ì „ì²´ ë°ì´í„°ì…‹ Zë¥¼ í–‰ ìš°ì„  ìˆœì„œ(row-order)
     vector<double> Z_row_order;
-    Z_row_order.reserve(num_samples * num_features); //¸Ş¸ğ¸® °ø°£ ¹Ì¸® È®º¸
+    Z_row_order.reserve(num_samples * num_features); //ë©”ëª¨ë¦¬ ê³µê°„ ë¯¸ë¦¬ í™•ë³´
     for (const auto& row : all_Z) {
         Z_row_order.insert(Z_row_order.end(), row.begin(), row.end());
     }
 
-    // ?? Enc time ÃøÁ¤ ½ÃÀÛ: Z, beta ÀÎÄÚµù + ¾ÏÈ£È­ ±¸°£
+    // ?? Enc time ì¸¡ì • ì‹œì‘: Z, beta ì¸ì½”ë”© + ì•”í˜¸í™” êµ¬ê°„
     auto enc_start = high_resolution_clock::now();
 
-    //ÆòÅºÈ­µÈ Z º¤ÅÍ¸¦ ÀÎÄÚµùÇÏ°í ¾ÏÈ£È­
+    //í‰íƒ„í™”ëœ Z ë²¡í„°ë¥¼ ì¸ì½”ë”©í•˜ê³  ì•”í˜¸í™”
     Plaintext plain_Z;
     encoder.encode(Z_row_order, scale, plain_Z);
     Ciphertext ct_Z;
     encryptor.encrypt(plain_Z, ct_Z);
 
-    vector<double> beta_vec(num_features, 0.01); //³í¹®¿¡ ÃÊ±â °ªÀ» randomÀ¸·Î Àâ´Â´Ù°í µÇ¾îÀÖ±â¿¡
+    vector<double> beta_vec(num_features, 0.01); //ë…¼ë¬¸ì— ì´ˆê¸° ê°’ì„ randomìœ¼ë¡œ ì¡ëŠ”ë‹¤ê³  ë˜ì–´ìˆê¸°ì—
     
 
-    // beta_vecÀÇ ³»¿ëÀ» n¹ø ¸¸Å­ beta_matrix_row_order¿¡ ÀÌ¾î ºÙÀÎ´Ù. row_order·Î 
+    // beta_vecì˜ ë‚´ìš©ì„ në²ˆ ë§Œí¼ beta_matrix_row_orderì— ì´ì–´ ë¶™ì¸ë‹¤. row_orderë¡œ 
     vector<double> beta_matrix_row_order;
     beta_matrix_row_order.reserve(num_samples * num_features);
     for (size_t i = 0; i < num_samples; ++i) {
@@ -134,12 +134,13 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
 
     int max_iter = 7;
 
+    // ë¯¸ë¦¬ mask ë²¡í„°ë§Œ ë§Œë“¤ì–´ ë‘”ë‹¤ (PlaintextëŠ” ë§¤ iterì—ì„œ encode)
     vector<double> mask_firstcol(num_samples * num_features, 0.0);
-        for (size_t i = 0; i < num_samples; ++i) {
-            mask_firstcol[i * num_features] = 1.0;
-        }
+    for (size_t i = 0; i < num_samples; ++i) {
+        mask_firstcol[i * num_features] = 1.0;
+    }
 
-    //Learn time ÃøÁ¤ ½ÃÀÛ
+    //Learn time ì¸¡ì • ì‹œì‘
     auto learn_start = high_resolution_clock::now();
 
     for (int iter = 0; iter < max_iter; ++iter)
@@ -148,17 +149,15 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
         
         Ciphertext ct_beta_prev = ct_beta;
 
-        //iteration¸¶´Ù Z´Â ¿øº»¿¡¼­ º¹»çÇØ¼­ »ç¿ë
+        //iterationë§ˆë‹¤ ZëŠ” ì›ë³¸ì—ì„œ ë³µì‚¬í•´ì„œ ì‚¬ìš©
         Ciphertext ct_Z_iter = ct_Z;
         
         if (ct_Z_iter.parms_id() != ct_v.parms_id()) {
-            // ct_Z°¡ ´õ ³ôÀº ·¹º§(Chain Index°¡ Å­)ÀÏ °ÍÀÌ¹Ç·Î ct_v¿¡ ¸ÂÃã
+            // ct_Zê°€ ë” ë†’ì€ ë ˆë²¨(Chain Indexê°€ í¼)ì¼ ê²ƒì´ë¯€ë¡œ ct_vì— ë§ì¶¤
             evaluator.mod_switch_to_inplace(ct_Z_iter, ct_v.parms_id());
         }
-        // Scale ¹Ì¼¼ ¿ÀÂ÷·Î ÀÎÇÑ ¿¡·¯ ¹æÁö¿ë ¼öµ¿ Á¶Á¤Àº Á¦°Å
-        // ct_Z_iter.scale() = ct_v.scale();
         
-        //³í¹®¿¡¼­ ¸»ÇÑ step1°úÁ¤
+        //ë…¼ë¬¸ì—ì„œ ë§í•œ step1ê³¼ì •
         cout << "Step 1..." << flush;
         Ciphertext ct1;
         evaluator.multiply(ct_v, ct_Z_iter, ct1);
@@ -166,7 +165,7 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
         evaluator.rescale_to_next_inplace(ct1);
         cout << " OK" << endl;
 
-        //step2 slotwise µ¡¼À°ú rotate¸¦ ÅëÇØ ³»Àû°ª ±¸ÇÏ±â
+        //step2 slotwise ë§ì…ˆê³¼ rotateë¥¼ í†µí•´ ë‚´ì ê°’ êµ¬í•˜ê¸°
         cout << "Step 2..." << flush;
         for (int j = 0; j < static_cast<int>(ceil(log2(num_features))); ++j) {
             int shift = (1 << j);
@@ -177,9 +176,8 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
         Ciphertext ct2 = ct1;
         cout << " OK" << endl;
 
-        //step3 maskingÇÏ´Â°Å
+        //step3 maskingí•˜ëŠ”ê±°
         cout << "Step 3..." << flush;
-
         Plaintext plain_mask;
         encoder.encode(mask_firstcol, scale, plain_mask);
         
@@ -202,102 +200,94 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
         }
         cout << " OK" << endl;
 
-        // step5 ±Ù»ç sigmoid ÇÔ¼ö (5Â÷ ±Ù»ç)
+        // step5 ê·¼ì‚¬ sigmoid í•¨ìˆ˜ (5ì°¨ ê·¼ì‚¬) - Horner ë°©ì‹
         cout << "Step 5..." << flush;
-        Ciphertext enc_dot = ct3;   
-        
-        // 1. x^2 °è»ê
-        Ciphertext enc_dot_sq;
-        evaluator.square(enc_dot, enc_dot_sq);
-        evaluator.relinearize_inplace(enc_dot_sq, relin_keys);
-        evaluator.rescale_to_next_inplace(enc_dot_sq);
+        Ciphertext enc_dot = ct3;   // x
 
-        // 2. x^4 °è»ê
-        Ciphertext enc_dot_q4;
-        evaluator.square(enc_dot_sq, enc_dot_q4);
-        evaluator.relinearize_inplace(enc_dot_q4, relin_keys);
-        evaluator.rescale_to_next_inplace(enc_dot_q4);
+        // t = (x / 8)
+        double inv8 = 1.0 / 8.0;
+        Plaintext plain_inv8;
+        encoder.encode(inv8, scale, plain_inv8);
+        if (plain_inv8.parms_id() != enc_dot.parms_id())
+            evaluator.mod_switch_to_inplace(plain_inv8, enc_dot.parms_id());
 
-        // 3. 5Â÷Ç× (Term 5): -1.3511295 * (x/8)^5
-        // °è¼ö ·Îµù (scaleÀº ÇöÀç enc_dot¿¡ ¸ÂÃã)
-        double coef5 = -1.3511295 / 32768.0;
-        Plaintext plain_coef5;
-        encoder.encode(coef5, scale, plain_coef5);
-        if (plain_coef5.parms_id() != enc_dot.parms_id()) 
-            evaluator.mod_switch_to_inplace(plain_coef5, enc_dot.parms_id());
+        Ciphertext t;
+        evaluator.multiply_plain(enc_dot, plain_inv8, t);
+        evaluator.rescale_to_next_inplace(t);
+        t.scale() = scale;
 
-        Ciphertext term5_part;
-        evaluator.multiply_plain(enc_dot, plain_coef5, term5_part);
-        evaluator.rescale_to_next_inplace(term5_part);
+        // t^2
+        Ciphertext t2;
+        evaluator.square(t, t2);
+        evaluator.relinearize_inplace(t2, relin_keys);
+        evaluator.rescale_to_next_inplace(t2);
+        t2.scale() = scale;
 
-        // q4(·¹º§ ³·À½, depth 2) vs term5_part(·¹º§ ³ôÀ½, depth 1)
-        if (term5_part.parms_id() != enc_dot_q4.parms_id()) {
-            // term5_part¸¦ enc_dot_q4ÀÇ ·¹º§·Î ´Ù¿î
-            evaluator.mod_switch_to_inplace(term5_part, enc_dot_q4.parms_id());
+        // g(x) = 0.5 + a1 t + a3 t^3 + a5 t^5
+        double a5 = -1.3511295;
+        double a3 =  2.3533056;
+        double a1 = -1.53048;
+
+        // z1 = a5 * t^2 + a3
+        Plaintext plain_a5;
+        encoder.encode(a5, scale, plain_a5);
+        if (plain_a5.parms_id() != t2.parms_id())
+            evaluator.mod_switch_to_inplace(plain_a5, t2.parms_id());
+
+        Ciphertext z1;
+        evaluator.multiply_plain(t2, plain_a5, z1);
+        evaluator.rescale_to_next_inplace(z1);
+        z1.scale() = scale;
+
+        Plaintext plain_a3;
+        encoder.encode(a3, scale, plain_a3);
+        if (plain_a3.parms_id() != z1.parms_id())
+            evaluator.mod_switch_to_inplace(plain_a3, z1.parms_id());
+        plain_a3.scale() = z1.scale();
+
+        evaluator.add_plain_inplace(z1, plain_a3);  // z1 = a5 t^2 + a3
+
+        // z2 = z1 * t^2 + a1
+        if (t2.parms_id() != z1.parms_id()) {
+            evaluator.mod_switch_to_inplace(t2, z1.parms_id());
         }
-        term5_part.scale() = enc_dot_q4.scale(); // scale °­Á¦ ÀÏÄ¡
+        t2.scale() = z1.scale();
 
-        Ciphertext term5;
-        evaluator.multiply(term5_part, enc_dot_q4, term5);
-        evaluator.relinearize_inplace(term5, relin_keys);
-        evaluator.rescale_to_next_inplace(term5);
+        Ciphertext z2;
+        evaluator.multiply(z1, t2, z2);
+        evaluator.relinearize_inplace(z2, relin_keys);
+        evaluator.rescale_to_next_inplace(z2);
+        z2.scale() = scale;
 
-        // 4. 3Â÷Ç× (Term 3): 2.3533056 * (x/8)^3
-        double coef3 = 2.3533056 / 512.0;
-        Plaintext plain_coef3;
-        encoder.encode(coef3, scale, plain_coef3);
-        if (plain_coef3.parms_id() != enc_dot.parms_id())
-            evaluator.mod_switch_to_inplace(plain_coef3, enc_dot.parms_id());
+        Plaintext plain_a1;
+        encoder.encode(a1, scale, plain_a1);
+        if (plain_a1.parms_id() != z2.parms_id())
+            evaluator.mod_switch_to_inplace(plain_a1, z2.parms_id());
+        plain_a1.scale() = z2.scale();
 
-        Ciphertext term3_part;
-        evaluator.multiply_plain(enc_dot, plain_coef3, term3_part);
-        evaluator.rescale_to_next_inplace(term3_part);
+        evaluator.add_plain_inplace(z2, plain_a1);  // z2 = (a5 t^2 + a3) t^2 + a1
 
-        if (term3_part.parms_id() != enc_dot_sq.parms_id()) {
-            evaluator.mod_switch_to_inplace(term3_part, enc_dot_sq.parms_id());
+        // sigmoid_enc = z2 * t + 0.5
+        if (t.parms_id() != z2.parms_id()) {
+            evaluator.mod_switch_to_inplace(t, z2.parms_id());
         }
-        term3_part.scale() = enc_dot_sq.scale();
+        t.scale() = z2.scale();
 
-        Ciphertext term3;
-        evaluator.multiply(term3_part, enc_dot_sq, term3);
-        evaluator.relinearize_inplace(term3, relin_keys);
-        evaluator.rescale_to_next_inplace(term3);
+        Ciphertext sigmoid_enc;
+        evaluator.multiply(z2, t, sigmoid_enc);
+        evaluator.relinearize_inplace(sigmoid_enc, relin_keys);
+        evaluator.rescale_to_next_inplace(sigmoid_enc);
 
-        // 5. 1Â÷Ç× (Term 1): -1.53048 * (x/8)
-        double coef1 = -1.53048 / 8.0;
-        Plaintext plain_coef1;
-        encoder.encode(coef1, scale, plain_coef1);
-        if (plain_coef1.parms_id() != enc_dot.parms_id())
-            evaluator.mod_switch_to_inplace(plain_coef1, enc_dot.parms_id());
-
-        Ciphertext term1;
-        evaluator.multiply_plain(enc_dot, plain_coef1, term1);
-        evaluator.rescale_to_next_inplace(term1);
-
-        // 6. ÀüÃ¼ ÇÕ»ê (Term 5, Term 3, Term 1 ´õÇÏ±â)
-        // °¡Àå ¸¹ÀÌ ¿¬»êµÈ Term 5°¡ ·¹º§ÀÌ Á¦ÀÏ ³·±â¿¡ ³ª¸ÓÁö¸¦ Term 5¿¡ ¸ÂÃã.
-        
-        // Term 3 -> Term 5
-        if (term3.parms_id() != term5.parms_id())
-            evaluator.mod_switch_to_inplace(term3, term5.parms_id());
-        term3.scale() = term5.scale(); 
-
-        // Term 1 -> Term 5
-        if (term1.parms_id() != term5.parms_id())
-            evaluator.mod_switch_to_inplace(term1, term5.parms_id());
-        term1.scale() = term5.scale();
+        sigmoid_enc.scale() = scale;
 
         Plaintext plain_const;
         encoder.encode(0.5, scale, plain_const);
-        if (plain_const.parms_id() != term5.parms_id())
-            evaluator.mod_switch_to_inplace(plain_const, term5.parms_id());
-        plain_const.scale() = term5.scale(); 
+        if (plain_const.parms_id() != sigmoid_enc.parms_id())
+            evaluator.mod_switch_to_inplace(plain_const, sigmoid_enc.parms_id());
+        plain_const.scale() = sigmoid_enc.scale();
 
-        Ciphertext sigmoid_enc;
-        evaluator.add(term5, term3, sigmoid_enc);
-        evaluator.add_inplace(sigmoid_enc, term1);
         evaluator.add_plain_inplace(sigmoid_enc, plain_const);
-        
+
         Ciphertext ct5 = sigmoid_enc;
         cout << " OK" << endl;
 
@@ -330,7 +320,7 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
 
         //step 8
         cout << "Step 8..." << flush;
-        double alpha_t = 10.0 / static_cast<double>(iter + 1); // ³í¹®°ú µ¿ÀÏÇÑ ¥á_t
+        double alpha_t = 10.0 / static_cast<double>(iter + 1); // ë…¼ë¬¸ê³¼ ë™ì¼í•œ Î±_t
         double learn_rate = alpha_t / static_cast<double>(num_samples);
 
         Plaintext pt_lr;
@@ -348,7 +338,6 @@ Ciphertext logistic_train(SEALContext& context, CKKSEncoder& encoder,Evaluator& 
         ct_v.scale() = ct8.scale();
         
         evaluator.sub(ct_v, ct8, ct_beta_next);
-        //evaluator.add(ct_v, ct8, ct_beta_next);
         cout << " OK" << endl;
 
         //Step 9

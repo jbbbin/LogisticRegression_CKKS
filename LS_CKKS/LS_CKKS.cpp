@@ -1,6 +1,8 @@
 ﻿#include "LS_CKKS.h"
 #include "LS_Inference_CKKS.h"
 #include "LS_Train_CKKS.h"
+#include "LS_Train_Diag_CKKS.h"
+#include "LS_Train_Honer_CKKS.h"
 #include "seal/seal.h"
 
 #include <iostream>
@@ -15,8 +17,8 @@ int main()
     size_t poly_modulus_degree = 65536;
     params.set_poly_modulus_degree(poly_modulus_degree);
     std::vector<int> modulus_bits = { 60 };
-    for(int i=0; i<60; ++i)
-        modulus_bits.push_back(50); // 중간을 40으로
+    for(int i=0; i<70; ++i)
+        modulus_bits.push_back(50);
     
     modulus_bits.push_back(60);
 
@@ -40,7 +42,7 @@ int main()
     CKKSEncoder encoder(context);
 
     // ⬇️ Enc time / Learn time 측정은 logistic_train 내부에서 각각 출력한다.
-    Ciphertext trained_beta = logistic_train(context, encoder, evaluator, encryptor, decryptor, relin_keys, gal_keys, scale);
+    Ciphertext trained_beta = logistic_train_honer(context, encoder, evaluator, encryptor, decryptor, relin_keys, gal_keys, scale);
     
     run_inference(context, encoder, evaluator, encryptor, decryptor, relin_keys, gal_keys, trained_beta, scale);
 

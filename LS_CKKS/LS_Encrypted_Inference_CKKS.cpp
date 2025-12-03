@@ -72,7 +72,7 @@ void run_encrypted_inference(SEALContext& context,CKKSEncoder& encoder,Evaluator
         // 이제 enc_dot의 모든 슬롯에는 내적 값(z)이 들어있습니다 (엄밀히는 첫 슬롯 등).
 
         // 2. Sigmoid 5차 근사 계산
-        // ct5 계산 로직 (Train 코드와 동일한 구조 사용)
+        // ct5 계산 로직 (Train 코드와 동일f한 구조 사용)
 
         // 2-1. x^2
         Ciphertext enc_dot_sq;

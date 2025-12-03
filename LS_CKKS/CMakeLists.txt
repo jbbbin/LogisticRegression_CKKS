@@ -20,8 +20,11 @@ add_executable(LS_CKKS
     LS_Train_CKKS.cpp 
     LS_Inference_CKKS.cpp 
     LS_Inference_CKKS.h 
-    LS_Train_ckks.h 
+    LS_Train_CKKS.h 
     LS_Train_Diag_CKKS.cpp
+    LS_Train_Diag_CKKS.h
+    LS_Train_Honer_CKKS.cpp
+    LS_Train_Honer_CKKS.h
 )
 
 # 6. SEAL 라이브러리 연결

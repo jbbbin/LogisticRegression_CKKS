@@ -12,7 +12,7 @@ using namespace std;
 using namespace seal;
 
 // Train에서 사용한 load_data 재사용 (정의는 LS_Train_CKKS.cpp 쪽에 있음)
-void load_data(const string& filename,
+void load_data_honer(const string& filename,
                vector<vector<double>>& X,
                vector<double>& y);
 
@@ -29,7 +29,7 @@ void run_inference(SEALContext& context,
     // 1) Train 때와 동일한 데이터셋 로드 (Edinburgh)
     vector<vector<double>> X;
     vector<double> y;
-    load_data("Edinburgh.txt", X, y);
+    load_data_honer("Edinburgh.txt", X, y);
 
     size_t num_samples  = X.size();
     if (num_samples == 0) {
